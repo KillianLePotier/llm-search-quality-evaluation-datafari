@@ -29,3 +29,5 @@ output/
 
 # JetBrains IDE folder
 .idea/
+/resources
+/results    
