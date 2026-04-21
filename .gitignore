@@ -30,4 +30,5 @@ output/
 # JetBrains IDE folder
 .idea/
 /resources
-/results    
+/results
+*cache*
