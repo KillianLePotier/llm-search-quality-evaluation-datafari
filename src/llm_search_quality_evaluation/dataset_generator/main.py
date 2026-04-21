@@ -4,7 +4,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from llm_search_quality_evaluation.dataset_generator.llm.llm_provider_factory import LazyLLM
+from llm_search_quality_evaluation.dataset_generator.llm.llm_provider_factory import (
+    LazyLLM,
+)
 from llm_search_quality_evaluation.shared.utils import _to_string
 import argparse
 # -------------------------------------------------------------
@@ -14,28 +16,51 @@ from logging import Logger, getLogger
 
 # project imports
 from llm_search_quality_evaluation.shared.logger import setup_logging
-from llm_search_quality_evaluation.dataset_generator.llm import LLMConfig, LLMService, LLMServiceFactory
+from llm_search_quality_evaluation.dataset_generator.llm import (
+    LLMConfig,
+    LLMService,
+    LLMServiceFactory,
+)
 from llm_search_quality_evaluation.shared.models import Document, Query
-from llm_search_quality_evaluation.shared.writers import WriterFactory, AbstractWriter, WriterConfig
-from llm_search_quality_evaluation.shared.search_engines import SearchEngineFactory, BaseSearchEngine
+from llm_search_quality_evaluation.shared.writers import (
+    WriterFactory,
+    AbstractWriter,
+    WriterConfig,
+)
+from llm_search_quality_evaluation.shared.search_engines import (
+    SearchEngineFactory,
+    BaseSearchEngine,
+)
 from llm_search_quality_evaluation.shared.data_store import DataStore
 from llm_search_quality_evaluation.shared.utils import join_fields_as_text
 
-from llm_search_quality_evaluation.dataset_generator.models import LLMQueryResponse, LLMScoreResponse
+from llm_search_quality_evaluation.dataset_generator.models import (
+    LLMQueryResponse,
+    LLMScoreResponse,
+)
 from llm_search_quality_evaluation.dataset_generator.config import Config
 
 log: Logger = getLogger(__name__)
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description='Parse arguments for CLI.')
+    parser = argparse.ArgumentParser(description="Parse arguments for CLI.")
 
-    parser.add_argument('-c', '--config', type=str,
-                        help='Config file path to use for the application [default: "examples/configs/dataset_generator/dataset_generator_config.yaml"]',
-                        required=False, default="examples/configs/dataset_generator/dataset_generator_config.yaml")
+    parser.add_argument(
+        "-c",
+        "--config",
+        type=str,
+        help='Config file path to use for the application [default: "examples/configs/dataset_generator/dataset_generator_config.yaml"]',
+        required=False,
+        default="examples/configs/dataset_generator/dataset_generator_config.yaml",
+    )
 
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='Activate debug mode for logging [default: False]')
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Activate debug mode for logging [default: False]",
+    )
 
     return parser.parse_args()
 
@@ -51,13 +76,17 @@ def add_user_queries(config: Config, data_store: DataStore) -> None:
             log.info(f"Added user-defined queries from file={config.queries}")
 
 
-def generate_and_add_queries(config: Config, data_store: DataStore, llm_service: LLMService,
-                             search_engine: BaseSearchEngine) -> None:
+def generate_and_add_queries(
+    config: Config,
+    data_store: DataStore,
+    llm_service: LLMService,
+    search_engine: BaseSearchEngine,
+) -> None:
     """Retrieve docs and generate queries with LLM Service. Adds docs, queries and ratings to the datastore."""
     docs_to_generate_queries: List[Document] = search_engine.fetch_for_query_generation(
         documents_filter=config.documents_filter,
         number_of_docs=config.number_of_docs,
-        doc_fields=config.doc_fields
+        doc_fields=config.doc_fields,
     )
 
     for doc in docs_to_generate_queries:
@@ -68,57 +97,84 @@ def generate_and_add_queries(config: Config, data_store: DataStore, llm_service:
     if remaining == 0:
         return
 
-    num_queries_per_doc: int = int((remaining // max(1, config.number_of_docs)) + 1)  # always greater or equal to 1
-    log.debug(f"Number of documents retrieved for generation: {len(docs_to_generate_queries)}")
+    num_queries_per_doc: int = int(
+        (remaining // max(1, config.number_of_docs)) + 1
+    )  # always greater or equal to 1
+    log.debug(
+        f"Number of documents retrieved for generation: {len(docs_to_generate_queries)}"
+    )
     log.debug(f"Pending queries to generate: {remaining}")
     log.debug(f"Number of queries per document: {num_queries_per_doc}")
 
     for doc in docs_to_generate_queries:
-        query_response: LLMQueryResponse = llm_service.generate_queries(doc, num_queries_per_doc,
-                                                                        config.max_query_terms)
+        query_response: LLMQueryResponse = llm_service.generate_queries(
+            doc, num_queries_per_doc, config.max_query_terms
+        )
         for query_ in query_response.get_queries():
             if len(data_store.get_queries()) >= config.num_queries_needed:
                 return
             query_obj: Query = data_store.add_query(query_)
             data_store.create_rating_score(
-                query_obj.id, doc.id, max(config.relevance_label_set),
-                "Default max rating is assigned because the query is generated by the document"
+                query_obj.id,
+                doc.id,
+                max(config.relevance_label_set),
+                "Default max rating is assigned because the query is generated by the document",
             )
 
 
-def add_cartesian_product_scores(config: Config, data_store: DataStore, llm_service: LLMService) -> None:
+def add_cartesian_product_scores(
+    config: Config, data_store: DataStore, llm_service: LLMService
+) -> None:
     """Complete the (query, doc) matrix with LLM scores."""
     log.debug("Cartesian product is enabled, so adding cartesian product scores")
     for query_obj in data_store.get_queries():
         for doc_obj in data_store.get_cartesian_prod_docs():
             if not data_store.has_rating_score(query_obj.id, doc_obj.id):
                 score_resp: LLMScoreResponse = llm_service.generate_score(
-                    doc_obj, query_obj.text, config.relevance_scale, config.save_llm_explanation
+                    doc_obj,
+                    query_obj.text,
+                    config.relevance_scale,
+                    config.save_llm_explanation,
                 )
                 data_store.create_rating_score(
-                    query_obj.id, doc_obj.id, score_resp.get_score(),
-                    score_resp.explanation if config.save_llm_explanation else None
+                    query_obj.id,
+                    doc_obj.id,
+                    score_resp.get_score(),
+                    score_resp.explanation if config.save_llm_explanation else None,
                 )
 
 
-def expand_docset_with_search_engine_top_k(config: Config, data_store: DataStore,
-                                           llm_service: LLMService, search_engine: BaseSearchEngine) -> None:
+def expand_docset_with_search_engine_top_k(
+    config: Config,
+    data_store: DataStore,
+    llm_service: LLMService,
+    search_engine: BaseSearchEngine,
+) -> None:
     """Retrieve docs for each query and score the (q, doc) pairs."""
     if config.query_template is not None:
-        log.debug(f"Searching for documents with query template in {config.query_template}")
+        log.debug(
+            f"Searching for documents with query template in {config.query_template}"
+        )
         for query_obj in data_store.get_queries():
             docs_eval: List[Document] = search_engine.fetch_for_evaluation(
-                keyword=query_obj.text, query_template=config.query_template, doc_fields=config.doc_fields
+                keyword=query_obj.text,
+                query_template=config.query_template,
+                doc_fields=config.doc_fields,
             )
             for doc_obj in docs_eval:
                 data_store.add_document(doc_obj)
                 if not data_store.has_rating_score(query_obj.id, doc_obj.id):
                     score_resp: LLMScoreResponse = llm_service.generate_score(
-                        doc_obj, query_obj.text, config.relevance_scale, config.save_llm_explanation
+                        doc_obj,
+                        query_obj.text,
+                        config.relevance_scale,
+                        config.save_llm_explanation,
                     )
                     data_store.create_rating_score(
-                        query_obj.id, doc_obj.id, score_resp.score,
-                        score_resp.explanation if config.save_llm_explanation else None
+                        query_obj.id,
+                        doc_obj.id,
+                        score_resp.score,
+                        score_resp.explanation if config.save_llm_explanation else None,
                     )
     else:
         log.warning("Query template not found. Skipping retrieval.")
@@ -137,9 +193,11 @@ def main() -> None:
     )
     search_engine: BaseSearchEngine = SearchEngineFactory.build(
         search_engine_type=config.search_engine_type,
-        endpoint=config.search_engine_collection_endpoint
+        endpoint=config.search_engine_collection_endpoint,
     )
-    llm: LazyLLM = LLMServiceFactory.build_lazy(LLMConfig.load(config.llm_configuration_file))
+    llm: LazyLLM = LLMServiceFactory.build_lazy(
+        LLMConfig.load(config.llm_configuration_file)
+    )
     service: LLMService = LLMService(chat_model=llm)
     writer: AbstractWriter = WriterFactory.build(writer_config)
 
@@ -166,7 +224,9 @@ def main() -> None:
     if config.save_llm_explanation:
         if llm_explanation_path := config.llm_explanation_destination:
             data_store.export_all_records_with_explanation(llm_explanation_path)
-            log.info(f"Dataset with LLM explanation is saved into: {llm_explanation_path}")
+            log.info(
+                f"Dataset with LLM explanation is saved into: {llm_explanation_path}"
+            )
 
     # TODO:
     #  work on a better solution, instead of overwriting the corpus.json file, and maybe modify the MtebWriter with the
@@ -180,7 +240,7 @@ def main() -> None:
                 doc_id = str(doc.id)
                 fields = doc.fields
                 title = _to_string(fields.get("title"))
-                text = join_fields_as_text(fields=fields, exclude={'id', 'title'})
+                text = join_fields_as_text(fields=fields, exclude={"id", "title"})
 
                 row = {"id": doc_id, "title": title, "text": text}
                 file.write(json.dumps(row, ensure_ascii=False) + "\n")

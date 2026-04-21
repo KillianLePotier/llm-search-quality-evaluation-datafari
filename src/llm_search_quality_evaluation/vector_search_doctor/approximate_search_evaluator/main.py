@@ -10,7 +10,9 @@ from llm_search_quality_evaluation.shared.writers import RreWriter
 from llm_search_quality_evaluation.shared.data_store import DataStore
 from llm_search_quality_evaluation.shared.logger import setup_logging
 from llm_search_quality_evaluation.shared.writers import WriterConfig
-from llm_search_quality_evaluation.vector_search_doctor.approximate_search_evaluator.config import Config
+from llm_search_quality_evaluation.vector_search_doctor.approximate_search_evaluator.config import (
+    Config,
+)
 
 log = logging.getLogger(__name__)
 
@@ -21,21 +23,25 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--config",
         type=str,
-        help='Config file path to use for the application [default: '
-             '"examples/configs/vector_search_doctor/approximate_search_evaluator/approximate_search_evaluator_config.yaml"]',
+        help="Config file path to use for the application [default: "
+        '"examples/configs/vector_search_doctor/approximate_search_evaluator/approximate_search_evaluator_config.yaml"]',
         required=False,
         default="examples/configs/vector_search_doctor/approximate_search_evaluator/approximate_search_evaluator_config.yaml",
     )
 
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='Activate debug mode for logging [default: False]')
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Activate debug mode for logging [default: False]",
+    )
 
     return parser.parse_args()
 
 
-def add_vector(rating_filename: str | Path,
-               embedding_filename: str | Path,
-               datastore: DataStore) -> None:
+def add_vector(
+    rating_filename: str | Path, embedding_filename: str | Path, datastore: DataStore
+) -> None:
     """
     Parse the writer output and add vectors
     under the '$vector' field inside each query's placeholders.
@@ -77,7 +83,8 @@ def add_vector(rating_filename: str | Path,
 def setup_rre(eval_folder: Path, search_engine_type: str, version: str) -> None:
     subprocess.run(
         [
-            "mvn", "archetype:generate",
+            "mvn",
+            "archetype:generate",
             "-Psease",
             "-B",
             "-DarchetypeGroupId=io.sease",
@@ -86,9 +93,9 @@ def setup_rre(eval_folder: Path, search_engine_type: str, version: str) -> None:
             "-DgroupId=io.sease.approximate-evaluator",
             f"-DartifactId={eval_folder}",
             "-Dversion=1.2-SNAPSHOT",
-            f"-D{'es' if search_engine_type == 'elasticsearch' else 'solr'}Version={version}"
+            f"-D{'es' if search_engine_type == 'elasticsearch' else 'solr'}Version={version}",
         ],
-        check=True
+        check=True,
     )
 
 
@@ -97,11 +104,7 @@ def run_rre_evaluate(eval_folder: Path) -> None:
     Run `mvn rre:evaluate` inside rre-evaluator-solr-external folder.
     """
     eval_dir = Path(__file__).parent.parent.parent.parent.parent / eval_folder
-    subprocess.run(
-        ["mvn", "rre:evaluate"],
-        cwd=eval_dir,
-        check=True
-    )
+    subprocess.run(["mvn", "rre:evaluate"], cwd=eval_dir, check=True)
 
 
 def main() -> None:
@@ -134,10 +137,14 @@ def main() -> None:
     for version in ["v1.0", "v1.1"]:  # if we use just one version, it breaks :)
         conf_sets_version_folder = conf_sets_folder / version
         conf_sets_version_folder.mkdir(parents=True, exist_ok=True)
-        with open(conf_sets_version_folder / config.conf_sets_filename, "w", encoding="utf-8") as f:
+        with open(
+            conf_sets_version_folder / config.conf_sets_filename, "w", encoding="utf-8"
+        ) as f:
             to_dump = {
-                config.search_engine_url_alias: [config.search_engine_url.encoded_string()],
-                config.collection_name_alias: config.collection_name
+                config.search_engine_url_alias: [
+                    config.search_engine_url.encoded_string()
+                ],
+                config.collection_name_alias: config.collection_name,
             }
             json.dump(to_dump, f, indent=2, ensure_ascii=False)
 
@@ -156,8 +163,10 @@ def main() -> None:
                 index=config.collection_name,
                 id_field=config.id_field,
                 query_template=config.query_template.name,
-                query_placeholder=config.query_placeholder if config.query_placeholder is not None else "$query",
-                output_format='rre'
+                query_placeholder=config.query_placeholder
+                if config.query_placeholder is not None
+                else "$query",
+                output_format="rre",
             )
         )
         writer.write(ratings_folder, data_store)
@@ -165,17 +174,25 @@ def main() -> None:
 
     if config.embeddings_folder is not None:
         log.debug("Adding vectors to ratings file...")
-        add_vector(ratings_file, config.embeddings_folder / "queries_embeddings.jsonl", data_store)
+        add_vector(
+            ratings_file,
+            config.embeddings_folder / "queries_embeddings.jsonl",
+            data_store,
+        )
     else:
-        log.warning("No embeddings folder was specified. If the specified templates has a '$vector' placeholder, this "
-                    "will break RRE evaluation.")
+        log.warning(
+            "No embeddings folder was specified. If the specified templates has a '$vector' placeholder, this "
+            "will break RRE evaluation."
+        )
 
     log.info("Running Maven RRE evaluation...")
     run_rre_evaluate(eval_folder)
     log.info("Evaluation finished.")
 
-    shutil.copy(eval_folder / "target" / "rre" / "evaluation.json",
-                config.output_destination / "rre_evaluation_results.json")
+    shutil.copy(
+        eval_folder / "target" / "rre" / "evaluation.json",
+        config.output_destination / "rre_evaluation_results.json",
+    )
     log.info(f"Evaluation file saved to `{config.output_destination}/` directory.")
 
     if not args.verbose:

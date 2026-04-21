@@ -4,6 +4,7 @@ from typing import List, Dict, Any
 
 class MockRequest:
     """Mock for the requests.Response.request object"""
+
     def __init__(self, url: str, method: str = "GET", body: str = None):
         self.url = url
         self.method = method
@@ -22,7 +23,7 @@ class MockResponseDatafari:
         total_hits: int = None,
         status_code: int = 200,
         url: str = "http://mock-datafari.com/select",
-        params: Dict[str, Any] = None
+        params: Dict[str, Any] = None,
     ):
         self._docs = docs
         self.status_code = status_code

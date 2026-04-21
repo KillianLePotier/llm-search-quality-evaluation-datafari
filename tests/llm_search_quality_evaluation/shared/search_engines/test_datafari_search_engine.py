@@ -7,7 +7,9 @@ from llm_search_quality_evaluation.shared.logger import configure_logging
 from llm_search_quality_evaluation.dataset_generator.config import Config
 
 from llm_search_quality_evaluation.shared.search_engines import DatafariSearchEngine
-from llm_search_quality_evaluation.shared.search_engines.search_engine_base import NUMBER_OF_DOCS_EACH_FETCH
+from llm_search_quality_evaluation.shared.search_engines.search_engine_base import (
+    NUMBER_OF_DOCS_EACH_FETCH,
+)
 from llm_search_quality_evaluation.shared.models import Document
 
 from mocks.datafari import MockResponseDatafari
@@ -27,7 +29,7 @@ def mock_doc():
     return {
         "id": "1",
         "exactTitle": "A first mocked title",
-        "exactContent": "A first mocked description"
+        "exactContent": "A first mocked description",
     }
 
 
@@ -37,16 +39,14 @@ def expected_doc(mock_doc):
         id="1",
         fields={
             "exactTitle": ["A first mocked title"],
-            "exactContent": ["A first mocked description"]
-        }
+            "exactContent": ["A first mocked description"],
+        },
     )
-
 
 
 def test_datafari_fetch_for_query_generation__expects__result_returned(
     monkeypatch, datafari_config, mock_doc, expected_doc
 ):
-
     def mock_get(url, headers=None, params=None):
         return MockResponseDatafari([mock_doc], status_code=200, params=params)
 
@@ -57,7 +57,7 @@ def test_datafari_fetch_for_query_generation__expects__result_returned(
     result = engine.fetch_for_query_generation(
         documents_filter=datafari_config.documents_filter,
         number_of_docs=datafari_config.number_of_docs,
-        doc_fields=datafari_config.doc_fields
+        doc_fields=datafari_config.doc_fields,
     )
 
     doc = result[0]
@@ -69,7 +69,6 @@ def test_datafari_fetch_for_query_generation__expects__result_returned(
 def test_datafari_fetch_for_evaluation__expects__result_returned(
     monkeypatch, datafari_config, mock_doc, expected_doc
 ):
-
     def mock_get(url, headers=None, params=None):
         return MockResponseDatafari([mock_doc], status_code=200, params=params)
 
@@ -80,7 +79,7 @@ def test_datafari_fetch_for_evaluation__expects__result_returned(
     result = engine.fetch_for_evaluation(
         keyword="test",
         query_template=datafari_config.query_template,
-        doc_fields=datafari_config.doc_fields
+        doc_fields=datafari_config.doc_fields,
     )
 
     doc = result[0]
@@ -92,7 +91,6 @@ def test_datafari_fetch_for_evaluation__expects__result_returned(
 def test_datafari_fetch_all__expects__results_returned(
     monkeypatch, datafari_config, mock_doc, expected_doc
 ):
-
     call_counter = {"count": 0}
 
     def mock_get(url, headers=None, params=None):
@@ -103,14 +101,12 @@ def test_datafari_fetch_all__expects__results_returned(
                 [],
                 total_hits=2 * NUMBER_OF_DOCS_EACH_FETCH,
                 status_code=200,
-                params=params
+                params=params,
             )
 
         elif call_counter["count"] in [2, 3]:
             return MockResponseDatafari(
-                [mock_doc] * NUMBER_OF_DOCS_EACH_FETCH,
-                status_code=200,
-                params=params
+                [mock_doc] * NUMBER_OF_DOCS_EACH_FETCH, status_code=200, params=params
             )
 
         return MockResponseDatafari([], status_code=200, params=params)
@@ -132,11 +128,9 @@ def test_datafari_fetch_all__expects__results_returned(
     assert len(docs) == 2 * NUMBER_OF_DOCS_EACH_FETCH
 
 
-
 def test_datafari_negative_fetch_for_query_generation__expects__raises_http_error(
     monkeypatch, datafari_config
 ):
-
     for status_code in [400, 401, 403, 500]:
 
         def mock_get(url, headers=None, params=None):
@@ -150,14 +144,13 @@ def test_datafari_negative_fetch_for_query_generation__expects__raises_http_erro
             engine.fetch_for_query_generation(
                 documents_filter=datafari_config.documents_filter,
                 number_of_docs=datafari_config.number_of_docs,
-                doc_fields=datafari_config.doc_fields
+                doc_fields=datafari_config.doc_fields,
             )
 
 
 def test_datafari_negative_fetch_for_evaluation__expects__raises_http_error(
     monkeypatch, datafari_config
 ):
-
     for status_code in [400, 401, 403, 500]:
 
         def mock_get(url, headers=None, params=None):
@@ -171,7 +164,7 @@ def test_datafari_negative_fetch_for_evaluation__expects__raises_http_error(
             engine.fetch_for_evaluation(
                 keyword="test",
                 query_template=datafari_config.query_template,
-                doc_fields=datafari_config.doc_fields
+                doc_fields=datafari_config.doc_fields,
             )
 
 

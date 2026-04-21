@@ -25,15 +25,15 @@ from typing import Any, Dict, Iterator, Optional, Set, Tuple, List
 
 # ========= DEFAULTS / PATHS =========
 # Default out root aligned with embedding-model-evaluator/resources/mteb_datasets
-DEFAULT_OUT_ROOT = (Path(__file__).resolve().parents[1] / "resources" / "mteb_datasets")
+DEFAULT_OUT_ROOT = Path(__file__).resolve().parents[1] / "resources" / "mteb_datasets"
 DEFAULT_DATASET = "nfcorpus"
-DEFAULT_SPLIT = "test"    # "train" | "dev" | "test"
+DEFAULT_SPLIT = "test"  # "train" | "dev" | "test"
 DEFAULT_OVERWRITE = False
-DEFAULT_MAX_QUERIES = 0   # 0 = no cap
-DEFAULT_MAX_DOCS = 0      # 0 = no cap
+DEFAULT_MAX_QUERIES = 0  # 0 = no cap
+DEFAULT_MAX_DOCS = 0  # 0 = no cap
 
 # ---- Negative sampling (minimal) ----
-DEFAULT_NEGATIVE_PER_QUERY = 0   # 0 disables negatives
+DEFAULT_NEGATIVE_PER_QUERY = 0  # 0 disables negatives
 DEFAULT_RNG_SEED = 42
 
 # ===============================================
@@ -53,6 +53,7 @@ except Exception:
 
 log = logging.getLogger("mteb_export_min")
 
+
 # ------------------------- CLI -------------------------
 def parse_args() -> argparse.Namespace:
     """Build and parse CLI arguments (minimal)."""
@@ -60,20 +61,43 @@ def parse_args() -> argparse.Namespace:
         description="Download an MTEB dataset from HF and export to MTEB JSONL (retrieval-only).",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    p.add_argument("--dataset", default=DEFAULT_DATASET,
-                   help="MTEB dataset name (e.g., arguana). Will resolve to 'mteb/<name>' on HF.")
-    p.add_argument("--split", default=DEFAULT_SPLIT, choices=["train", "dev", "test"],
-                   help="Split used for queries and qrels. Corpus split is resolved automatically.")
-    p.add_argument("--out-root", default=None,
-                   help=f"Root output dir (default: {DEFAULT_OUT_ROOT})")
-    p.add_argument("--overwrite", action="store_true", default=DEFAULT_OVERWRITE,
-                   help="Overwrite existing outputs")
+    p.add_argument(
+        "--dataset",
+        default=DEFAULT_DATASET,
+        help="MTEB dataset name (e.g., arguana). Will resolve to 'mteb/<name>' on HF.",
+    )
+    p.add_argument(
+        "--split",
+        default=DEFAULT_SPLIT,
+        choices=["train", "dev", "test"],
+        help="Split used for queries and qrels. Corpus split is resolved automatically.",
+    )
+    p.add_argument(
+        "--out-root",
+        default=None,
+        help=f"Root output dir (default: {DEFAULT_OUT_ROOT})",
+    )
+    p.add_argument(
+        "--overwrite",
+        action="store_true",
+        default=DEFAULT_OVERWRITE,
+        help="Overwrite existing outputs",
+    )
     p.add_argument("--max-docs", type=int, default=DEFAULT_MAX_DOCS, help="0 = no cap")
-    p.add_argument("--max-queries", type=int, default=DEFAULT_MAX_QUERIES, help="0 = no cap")
-    p.add_argument("--negatives-per-query", type=int, default=DEFAULT_NEGATIVE_PER_QUERY,
-                   help="Quota of random negatives to add per kept query (0 disables)")
-    p.add_argument("--seed", type=int, default=DEFAULT_RNG_SEED, help="Random seed for determinism")
+    p.add_argument(
+        "--max-queries", type=int, default=DEFAULT_MAX_QUERIES, help="0 = no cap"
+    )
+    p.add_argument(
+        "--negatives-per-query",
+        type=int,
+        default=DEFAULT_NEGATIVE_PER_QUERY,
+        help="Quota of random negatives to add per kept query (0 disables)",
+    )
+    p.add_argument(
+        "--seed", type=int, default=DEFAULT_RNG_SEED, help="Random seed for determinism"
+    )
     return p.parse_args()
+
 
 # ------------------------- validation -------------------------
 def validate_args(args: argparse.Namespace) -> None:
@@ -92,6 +116,7 @@ def validate_args(args: argparse.Namespace) -> None:
             log.error(e)
         raise SystemExit(1)
 
+
 # ---------- utils ----------
 def setup_logging() -> None:
     """Configure root logger at INFO level."""
@@ -101,9 +126,11 @@ def setup_logging() -> None:
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
+
 def to_string(value: Any) -> str:
     """Convert any value to string safely, returning empty string for None."""
     return "" if value is None else (value if isinstance(value, str) else str(value))
+
 
 def normalize_text(value: Any) -> str:
     """Normalize text fields handling various data types including lists."""
@@ -114,6 +141,7 @@ def normalize_text(value: Any) -> str:
     if isinstance(value, list):
         return "\n".join(to_string(x) for x in value if x is not None)
     return to_string(value)
+
 
 def to_int(value: Any) -> int:
     """Convert any value to integer safely, returning 0 for invalid values.
@@ -127,11 +155,17 @@ def to_int(value: Any) -> int:
         except (ValueError, TypeError):
             return 0
 
+
 def normalize_doc(row: Dict[str, Any]) -> Tuple[str, str]:
     """Normalize common document fields into (title, text)."""
-    title = normalize_text(row.get("title") or row.get("Title") or row.get("headline") or row.get("name"))
-    text  = normalize_text(row.get("text")  or row.get("abstract") or row.get("contents") or row.get("body"))
+    title = normalize_text(
+        row.get("title") or row.get("Title") or row.get("headline") or row.get("name")
+    )
+    text = normalize_text(
+        row.get("text") or row.get("abstract") or row.get("contents") or row.get("body")
+    )
     return title, text
+
 
 def ensure_outputs(out_dir: Path, overwrite: bool) -> Tuple[Path, Path, Path, Path]:
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -139,10 +173,15 @@ def ensure_outputs(out_dir: Path, overwrite: bool) -> Tuple[Path, Path, Path, Pa
     queries = out_dir / "queries.jsonl"
     candidates = out_dir / "candidates.jsonl"
     manifest = out_dir / "manifest.json"
-    if not overwrite and any(p.exists() for p in (corpus, queries, candidates, manifest)):
-        log.error("Outputs already exist in %s (set OVERWRITE=True to replace).", out_dir)
+    if not overwrite and any(
+        p.exists() for p in (corpus, queries, candidates, manifest)
+    ):
+        log.error(
+            "Outputs already exist in %s (set OVERWRITE=True to replace).", out_dir
+        )
         raise SystemExit(1)
     return corpus, queries, candidates, manifest
+
 
 # ---------- loader adapted to MTEB/HF ----------
 class MtebLoader:
@@ -153,6 +192,7 @@ class MtebLoader:
       - corpus : typically the 'corpus' split (some datasets only expose this)
       - queries: train/dev/test (sometimes only 'test')
     """
+
     def __init__(self, ds_name: str, split: str):
         self.task_name = ds_name
         self.split = split
@@ -170,7 +210,9 @@ class MtebLoader:
                 return hid
             except Exception as e:
                 last_err = e
-        log.error("Dataset not found on HF for %s. Last error: %s", candidates, last_err)
+        log.error(
+            "Dataset not found on HF for %s. Last error: %s", candidates, last_err
+        )
         if last_err is not None:
             raise last_err
         raise RuntimeError(f"Dataset not found for {candidates}")
@@ -183,25 +225,39 @@ class MtebLoader:
                 return p
         if len(splits) == 1:
             return str(splits[0])
-        log.error("Split not available for %s/%s. Available splits: %s", self.hub_id, config_name, splits)
+        log.error(
+            "Split not available for %s/%s. Available splits: %s",
+            self.hub_id,
+            config_name,
+            splits,
+        )
         raise SystemExit(1)
 
     def load_three(self) -> Tuple[Any, Any, Any]:
         """Load the three datasets."""
         # qrels (default)
         qrels_split = self._pick_split("default", [self.split, "test", "dev", "train"])
-        qrels   = self._load_dataset(self.hub_id, split=qrels_split)
+        qrels = self._load_dataset(self.hub_id, split=qrels_split)
 
         # corpus (often only 'corpus' split)
-        corpus_split = self._pick_split("corpus", ["corpus", self.split, "test", "dev", "train"])
-        corpus  = self._load_dataset(self.hub_id, name="corpus", split=corpus_split)
+        corpus_split = self._pick_split(
+            "corpus", ["corpus", self.split, "test", "dev", "train"]
+        )
+        corpus = self._load_dataset(self.hub_id, name="corpus", split=corpus_split)
 
         # queries
-        queries_split = self._pick_split("queries", [self.split, "test", "dev", "train"])
+        queries_split = self._pick_split(
+            "queries", [self.split, "test", "dev", "train"]
+        )
         queries = self._load_dataset(self.hub_id, name="queries", split=queries_split)
 
-        log.info("HF hub_id=%s | splits → default:%s | corpus:%s | queries:%s",
-                 self.hub_id, qrels_split, corpus_split, queries_split)
+        log.info(
+            "HF hub_id=%s | splits → default:%s | corpus:%s | queries:%s",
+            self.hub_id,
+            qrels_split,
+            corpus_split,
+            queries_split,
+        )
         return corpus, queries, qrels
 
     # Iterators robust to field name variants
@@ -217,7 +273,9 @@ class MtebLoader:
     def iter_queries_ds(self, queries_ds: Any) -> Iterator[Tuple[str, str]]:
         """Iterate over the queries."""
         for row in queries_ds:
-            qid = to_string(row.get("_id") or row.get("id") or row.get("query_id") or row.get("qid"))
+            qid = to_string(
+                row.get("_id") or row.get("id") or row.get("query_id") or row.get("qid")
+            )
             if not qid:
                 continue
             yield qid, normalize_text(row.get("text", ""))
@@ -225,12 +283,26 @@ class MtebLoader:
     def iter_qrels(self, qrels_ds: Any) -> Iterator[Dict[str, Any]]:
         """Iterate over the qrels."""
         for row in qrels_ds:
-            qid = to_string(row.get("query-id") or row.get("query_id") or row.get("qid") or row.get("query"))
-            did = to_string(row.get("corpus-id") or row.get("doc_id") or row.get("document_id") or row.get("doc") or row.get("corpus_id"))
+            qid = to_string(
+                row.get("query-id")
+                or row.get("query_id")
+                or row.get("qid")
+                or row.get("query")
+            )
+            did = to_string(
+                row.get("corpus-id")
+                or row.get("doc_id")
+                or row.get("document_id")
+                or row.get("doc")
+                or row.get("corpus_id")
+            )
             if not qid or not did:
                 continue
-            rating = to_int(row.get("score") or row.get("label") or row.get("relevance") or 0)
+            rating = to_int(
+                row.get("score") or row.get("label") or row.get("relevance") or 0
+            )
             yield {"query_id": qid, "doc_id": did, "rating": rating}
+
 
 # ---------- negative sampling helper (random only) ----------
 def _sample_random(universe: List[str], banned: Set[str], k: int) -> List[str]:
@@ -243,9 +315,19 @@ def _sample_random(universe: List[str], banned: Set[str], k: int) -> List[str]:
         return avail
     return random.sample(avail, k)
 
+
 # ---------- export ----------
-def do_export(ds_name: str, split: str, out_root: Path, overwrite: bool, max_q: int, max_d: int, *,
-              negatives_per_query: int, rng_seed: int) -> None:
+def do_export(
+    ds_name: str,
+    split: str,
+    out_root: Path,
+    overwrite: bool,
+    max_q: int,
+    max_d: int,
+    *,
+    negatives_per_query: int,
+    rng_seed: int,
+) -> None:
     """Export an MTEB dataset to JSONL files under out_root/dataset/split.
 
     This preserves all positive pairs, deduplicates candidate pairs, caps via qrels order,
@@ -255,7 +337,9 @@ def do_export(ds_name: str, split: str, out_root: Path, overwrite: bool, max_q: 
     corpus_ds, queries_ds, qrels_ds = loader.load_three()
 
     out_dir = out_root / ds_name / split
-    corpus_path, queries_path, candidates_path, manifest_path = ensure_outputs(out_dir, overwrite)
+    corpus_path, queries_path, candidates_path, manifest_path = ensure_outputs(
+        out_dir, overwrite
+    )
 
     # -------- Step 1: write qrels into candidates, apply caps & gather stats --------
     keep_q: Optional[Set[str]] = set() if max_q > 0 else None
@@ -272,7 +356,7 @@ def do_export(ds_name: str, split: str, out_root: Path, overwrite: bool, max_q: 
     with jsonlines.open(candidates_path, mode="w") as wr:
         for pair in loader.iter_qrels(qrels_ds):
             qid, did = to_string(pair["query_id"]), to_string(pair["doc_id"])
-            rating   = int(pair.get("rating", 0))
+            rating = int(pair.get("rating", 0))
             qrels_total += 1
 
             # caps (first time seeing each id until reaching limit)
@@ -302,7 +386,9 @@ def do_export(ds_name: str, split: str, out_root: Path, overwrite: bool, max_q: 
                 cand_neg += 1
 
     if cand_total == 0:
-        log.error("No candidate pairs after caps/filters. Check MAX_* or dataset/split.")
+        log.error(
+            "No candidate pairs after caps/filters. Check MAX_* or dataset/split."
+        )
         raise SystemExit(1)
 
     # -------- Step 2: write corpus; also collect IDs (+ tokens if BM25 will be used) --------
@@ -392,7 +478,9 @@ def do_export(ds_name: str, split: str, out_root: Path, overwrite: bool, max_q: 
 
     # minimal checks: warn on suspicious outcomes
     if wrote_q == 0:
-        log.error("No queries with positive pairs were kept. Check split/dataset or caps.")
+        log.error(
+            "No queries with positive pairs were kept. Check split/dataset or caps."
+        )
         raise SystemExit(1)
 
     # -------- Step 6: manifest --------
@@ -414,7 +502,6 @@ def do_export(ds_name: str, split: str, out_root: Path, overwrite: bool, max_q: 
             "candidate_pairs_total": cand_total,
             "candidate_pairs_positive": cand_pos,
             "candidate_pairs_negative": cand_neg,
-
             "corpus_docs": wrote_docs,
             "queries_with_positive_pairs": wrote_q,
             "missing_docs_in_candidates_due_to_caps": missing_docs,
@@ -429,18 +516,31 @@ def do_export(ds_name: str, split: str, out_root: Path, overwrite: bool, max_q: 
     manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
     # Final logs
-    drop_ratio = (qrels_total - (cand_total - negatives_added)) / qrels_total if qrels_total else 0.0
+    drop_ratio = (
+        (qrels_total - (cand_total - negatives_added)) / qrels_total
+        if qrels_total
+        else 0.0
+    )
     if drop_ratio > 0.20:
         log.warning("High drop ratio due to caps: %.1f%%", 100 * drop_ratio)
     log.info(
         "Done. corpus=%d, queries(≥1pos)=%d, candidates=%d (pos=%d, neg=%d), negatives_added=%d, qrels=%d",
-        wrote_docs, wrote_q, cand_total, cand_pos, cand_neg, negatives_added, qrels_total
+        wrote_docs,
+        wrote_q,
+        cand_total,
+        cand_pos,
+        cand_neg,
+        negatives_added,
+        qrels_total,
     )
     if missing_docs or missing_queries or dup_pairs:
         log.warning(
             "Post-checks: missing_docs=%d, missing_queries=%d, duplicate_pairs=%d",
-            missing_docs, missing_queries, dup_pairs
+            missing_docs,
+            missing_queries,
+            dup_pairs,
         )
+
 
 def main() -> None:
     args = parse_args()
@@ -459,6 +559,7 @@ def main() -> None:
         negatives_per_query=args.negatives_per_query,
         rng_seed=args.seed,
     )
+
 
 if __name__ == "__main__":
     main()

@@ -3,14 +3,17 @@ from pathlib import Path
 from pydantic_core import ValidationError
 import pytest
 
-from llm_search_quality_evaluation.vector_search_doctor.approximate_search_evaluator import Config
+from llm_search_quality_evaluation.vector_search_doctor.approximate_search_evaluator import (
+    Config,
+)
+
 
 # --------------- solr ---------------
 def test_good_config_solr__expects__all_parameters_read(resource_folder):
     file_name = resource_folder / "good_config_solr.yaml"
     config = Config.load(resource_folder / file_name)
 
-    assert config.query_template == Path('tests/resources/template_solr.json')
+    assert config.query_template == Path("tests/resources/template_solr.json")
     assert config.search_engine_type == "solr"
     assert config.collection_name == "testcore"
     assert config.search_engine_url == HttpUrl("http://localhost:8983/solr/")
@@ -18,8 +21,12 @@ def test_good_config_solr__expects__all_parameters_read(resource_folder):
     assert config.id_field == "new_id"
     assert config.query_placeholder == "$query_placeholder"
     assert config.search_engine_version == "9.8.1"
-    assert config.ratings_path == Path("tests/resources/approximate_search_evaluator/ratings.json")
-    assert config.embeddings_folder == Path("tests/resources/approximate_search_evaluator/embeddings")
+    assert config.ratings_path == Path(
+        "tests/resources/approximate_search_evaluator/ratings.json"
+    )
+    assert config.embeddings_folder == Path(
+        "tests/resources/approximate_search_evaluator/embeddings"
+    )
     assert config.output_destination == Path("solr_resources")
 
     assert hasattr(config, "conf_sets_filename")
@@ -32,7 +39,9 @@ def test_good_config_solr__expects__all_parameters_read(resource_folder):
     assert config.search_engine_url_alias == "baseUrls"
 
 
-def test_missing_optional_solr_field_values__expects__all_defaults_read(resource_folder):
+def test_missing_optional_solr_field_values__expects__all_defaults_read(
+    resource_folder,
+):
     file_name = "missing_optional_solr.yaml"
     config = Config.load(resource_folder / file_name)
 
@@ -55,13 +64,18 @@ def test_missing_optional_solr_field_values__expects__all_defaults_read(resource
     assert config.output_destination == Path("resources")
 
 
-@pytest.mark.parametrize("file_name", [
-    "missing_query_template.yaml",
-    "missing_search_engine_type.yaml",
-    "missing_collection_name.yaml",
-    "missing_search_engine_url.yaml"
-])
-def test_missing_non_optional_field__expects__raises_validation_error(resource_folder, file_name):
+@pytest.mark.parametrize(
+    "file_name",
+    [
+        "missing_query_template.yaml",
+        "missing_search_engine_type.yaml",
+        "missing_collection_name.yaml",
+        "missing_search_engine_url.yaml",
+    ],
+)
+def test_missing_non_optional_field__expects__raises_validation_error(
+    resource_folder, file_name
+):
     with pytest.raises(ValidationError):
         _ = Config.load(resource_folder / file_name)
 
@@ -72,11 +86,10 @@ def test__expects__raises_file_not_found_error(resource_folder):
         _ = Config.load(resource_folder / file_name)
 
 
-
 # --------------- elasticsearch ---------------
 def test_good_config_elasticsearch__expects__all_parameters_read(resource_folder):
     config = Config.load(resource_folder / "good_config_elasticsearch.yaml")
-    assert config.query_template == Path('tests/resources/template_elasticsearch.json')
+    assert config.query_template == Path("tests/resources/template_elasticsearch.json")
     assert config.search_engine_type == "elasticsearch"
     assert config.collection_name == "testcore"
     assert config.search_engine_url == HttpUrl("http://localhost:9200/")
@@ -84,8 +97,12 @@ def test_good_config_elasticsearch__expects__all_parameters_read(resource_folder
     assert config.id_field == "new_id"
     assert config.query_placeholder == "$query_placeholder"
     assert config.search_engine_version == "7.5.0"
-    assert config.ratings_path == Path("tests/resources/approximate_search_evaluator/ratings.json")
-    assert config.embeddings_folder == Path("tests/resources/approximate_search_evaluator/embeddings")
+    assert config.ratings_path == Path(
+        "tests/resources/approximate_search_evaluator/ratings.json"
+    )
+    assert config.embeddings_folder == Path(
+        "tests/resources/approximate_search_evaluator/embeddings"
+    )
     assert config.output_destination == Path("elastic_resources")
 
     assert hasattr(config, "conf_sets_filename")
@@ -98,7 +115,9 @@ def test_good_config_elasticsearch__expects__all_parameters_read(resource_folder
     assert config.search_engine_url_alias == "hostUrls"
 
 
-def test_missing_optional_elasticsearch_field_values__expects__all_defaults_read(resource_folder):
+def test_missing_optional_elasticsearch_field_values__expects__all_defaults_read(
+    resource_folder,
+):
     file_name = "missing_optional_elasticsearch.yaml"
     config = Config.load(resource_folder / file_name)
 

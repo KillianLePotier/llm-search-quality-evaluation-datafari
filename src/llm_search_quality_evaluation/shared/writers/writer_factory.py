@@ -11,6 +11,7 @@ log = logging.getLogger(__name__)
 
 WriterType: TypeAlias = Type[AbstractWriter]
 
+
 class WriterFactory:
     OUTPUT_FORMAT_REGISTRY: Mapping[str, WriterType] = {
         "quepid": QuepidWriter,

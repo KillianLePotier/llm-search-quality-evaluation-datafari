@@ -7,7 +7,8 @@ from typing import Optional, Literal
 import yaml
 from pydantic import BaseModel, Field, FilePath, HttpUrl, model_validator
 from llm_search_quality_evaluation.vector_search_doctor.approximate_search_evaluator.constants import (
-    ELASTICSEARCH_SUPPORTED_VERSIONS, SOLR_SUPPORTED_VERSIONS
+    ELASTICSEARCH_SUPPORTED_VERSIONS,
+    SOLR_SUPPORTED_VERSIONS,
 )
 
 log = logging.getLogger(__name__)
@@ -16,27 +17,34 @@ log = logging.getLogger(__name__)
 class Config(BaseModel):
     query_template: FilePath = Field(
         ...,
-        description="Path pointing to a template file for queries with a placeholder for keywords."
+        description="Path pointing to a template file for queries with a placeholder for keywords.",
     )
-    search_engine_type: Literal['solr', 'elasticsearch']
-    collection_name: str = Field(..., description="Name of the index/collection of the search engine")
+    search_engine_type: Literal["solr", "elasticsearch"]
+    collection_name: str = Field(
+        ..., description="Name of the index/collection of the search engine"
+    )
     search_engine_url: HttpUrl = Field(..., description="Search engine URL")
-    search_engine_version: str = Field(default="latest", description="Search engine version.")
+    search_engine_version: str = Field(
+        default="latest", description="Search engine version."
+    )
     id_field: Optional[str] = Field(None, description="ID field for the unique key.")
     query_placeholder: str = Field(
         default="$query",
-        description="Key-value pair to substitute in the rre query template."
+        description="Key-value pair to substitute in the rre query template.",
     )
     ratings_path: Optional[Path] = Field(
         None,
-        description="Path to the rre ratings file. If not given, the content of the datastore is used."
+        description="Path to the rre ratings file. If not given, the content of the datastore is used.",
     )
     embeddings_folder: Optional[Path] = Field(
         None,
         description="Path to collect embeddings. If not given, embeddings are not collected.",
     )
-    output_destination: Path = Field(Path("resources"), description="Path to save the output dataset. By default, the "
-                                                                    "dataset will be saved into the `resources` folder.")
+    output_destination: Path = Field(
+        Path("resources"),
+        description="Path to save the output dataset. By default, the "
+        "dataset will be saved into the `resources` folder.",
+    )
 
     @property
     def conf_sets_filename(self) -> str:
@@ -70,7 +78,8 @@ class Config(BaseModel):
             self.search_engine_version = versions_to_check[-1]
         elif self.search_engine_version not in versions_to_check:
             raise ValueError(
-                f"Search engine version {self.search_engine_version} is not supported for {self.search_engine_type}")
+                f"Search engine version {self.search_engine_version} is not supported for {self.search_engine_type}"
+            )
         return self
 
     @model_validator(mode="after")
@@ -92,5 +101,7 @@ class Config(BaseModel):
         """
         with open(config_path, "r") as f:
             raw_config = yaml.safe_load(f)
-            log.debug("Approximate Search Evaluator configuration file loaded successfully.")
+            log.debug(
+                "Approximate Search Evaluator configuration file loaded successfully."
+            )
         return cls(**raw_config)

@@ -8,16 +8,35 @@ from llm_search_quality_evaluation.shared.models.document import Document
 
 NUMBER_OF_DOCS_EACH_FETCH = 100
 
-class BaseSearchEngine(ABC):
 
-    s = {'\\', '+', '-', '!', '(', ')', ':', '^', '[', ']', '"',
-         '{', '}', '~', '*', '?', '|', '&', '/'}
+class BaseSearchEngine(ABC):
+    s = {
+        "\\",
+        "+",
+        "-",
+        "!",
+        "(",
+        ")",
+        ":",
+        "^",
+        "[",
+        "]",
+        '"',
+        "{",
+        "}",
+        "~",
+        "*",
+        "?",
+        "|",
+        "&",
+        "/",
+    }
     SPECIAL_CHARS: set[str] = s
 
     def __init__(self, endpoint: HttpUrl):
         self.endpoint = HttpUrl(endpoint)
         self.QUERY_PLACEHOLDER = "$query"
-        self.UNIQUE_KEY = 'id'
+        self.UNIQUE_KEY = "id"
 
     @staticmethod
     def escape(string: str) -> str:
@@ -25,9 +44,9 @@ class BaseSearchEngine(ABC):
         sb = []
         for c in string:
             if c in BaseSearchEngine.SPECIAL_CHARS:
-                sb.append('\\')
+                sb.append("\\")
             sb.append(c)
-        return ''.join(sb)
+        return "".join(sb)
 
     def fetch_all(self, doc_fields: List[str]) -> Iterator[Document]:
         """Extract all documents from search engine in batches.
@@ -48,8 +67,8 @@ class BaseSearchEngine(ABC):
                 documents_filter=None,
                 number_of_docs=NUMBER_OF_DOCS_EACH_FETCH,
                 doc_fields=doc_fields,
-                start=start
-                )
+                start=start,
+            )
             if not batch:
                 break
             for doc in batch:
@@ -58,7 +77,6 @@ class BaseSearchEngine(ABC):
             # end of the docs. then len(batch) <= NUMBER_OF_DOCS_EACH_FETCH -> next iteration we exit the loop since
             # we are adding NUMBER_OF_DOCS_EACH_FETCH (not len(batch)) and start becomes greater than total_hits
             start += NUMBER_OF_DOCS_EACH_FETCH
-
 
     def _parse_query_template(self, path: Path | str) -> Dict[str, Any]:
         """Return the payload"""
@@ -70,36 +88,39 @@ class BaseSearchEngine(ABC):
         except JSONDecodeError as e:
             raise ValueError(f"Invalid JSON query_template: {e}")
 
-    def _replace_placeholder(self, obj: Any, placeholder: str, keyword: str | None) -> Any:
+    def _replace_placeholder(
+        self, obj: Any, placeholder: str, keyword: str | None
+    ) -> Any:
         if keyword is None:
             return obj
 
         if isinstance(obj, str):
             return obj.replace(placeholder, keyword)
         elif isinstance(obj, dict):
-            return {k: self._replace_placeholder(v, placeholder, keyword) for k, v in obj.items()}
+            return {
+                k: self._replace_placeholder(v, placeholder, keyword)
+                for k, v in obj.items()
+            }
         elif isinstance(obj, list):
             return [self._replace_placeholder(x, placeholder, keyword) for x in obj]
         else:
             return obj
 
-
     @abstractmethod
-    def fetch_for_query_generation(self,
-                                   documents_filter: Union[None, List[Dict[str, List[str]]]],
-                                   number_of_docs: int,
-                                   doc_fields: List[str],
-                                   start: int = 0) \
-            -> List[Document]:
+    def fetch_for_query_generation(
+        self,
+        documents_filter: Union[None, List[Dict[str, List[str]]]],
+        number_of_docs: int,
+        doc_fields: List[str],
+        start: int = 0,
+    ) -> List[Document]:
         """Extract documents for generating queries."""
         pass
 
     @abstractmethod
-    def fetch_for_evaluation(self,
-                             query_template: Path | str,
-                             doc_fields: List[str],
-                             keyword: str="*:*") \
-            -> List[Document]:
+    def fetch_for_evaluation(
+        self, query_template: Path | str, doc_fields: List[str], keyword: str = "*:*"
+    ) -> List[Document]:
         """Search for documents based on a keyword and a query template to evaluate the system."""
         pass
 
@@ -118,4 +139,3 @@ class BaseSearchEngine(ABC):
     def _fetch_all_payload(self) -> Dict[str, Any]:
         """Payload to fetch all documents from the search engine."""
         pass
-
