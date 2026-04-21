@@ -17,10 +17,6 @@ import logging
 configure_logging(level=logging.DEBUG)
 
 
-# =========================
-# Fixtures
-# =========================
-
 @pytest.fixture
 def datafari_config(resource_folder):
     return Config.load(resource_folder / "good_config_datafari.yaml")
@@ -37,7 +33,6 @@ def mock_doc():
 
 @pytest.fixture
 def expected_doc(mock_doc):
-    """Expected Document AFTER normalization"""
     return Document(
         id="1",
         fields={
@@ -47,9 +42,6 @@ def expected_doc(mock_doc):
     )
 
 
-# =========================
-# Positive tests
-# =========================
 
 def test_datafari_fetch_for_query_generation__expects__result_returned(
     monkeypatch, datafari_config, mock_doc, expected_doc
@@ -140,9 +132,6 @@ def test_datafari_fetch_all__expects__results_returned(
     assert len(docs) == 2 * NUMBER_OF_DOCS_EACH_FETCH
 
 
-# =========================
-# Negative tests
-# =========================
 
 def test_datafari_negative_fetch_for_query_generation__expects__raises_http_error(
     monkeypatch, datafari_config
