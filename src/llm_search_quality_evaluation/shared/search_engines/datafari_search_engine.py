@@ -173,7 +173,7 @@ class DatafariSearchEngine(BaseSearchEngine):
                 key: self._normalize(value)
                 for key, value in hit.items()
                 if key != self.UNIQUE_KEY
-}   
+            }
             result.append(Document(id=doc_id, fields=fields))
         log.info(f"Fetched {len(result)} documents from the engine")
         return result

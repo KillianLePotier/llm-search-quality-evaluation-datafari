@@ -36,9 +36,6 @@ number_of_docs: 100
 # Must be at least one field
 
 doc_fields:
-  #- "title"
-  #- "content"
-  #- "description"
   - "exactTitle"
   - "exactContent"
 

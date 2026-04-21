@@ -239,8 +239,14 @@ def main() -> None:
             for doc in search_engine.fetch_all(doc_fields=config.doc_fields):
                 doc_id = str(doc.id)
                 fields = doc.fields
-                title = _to_string(fields.get("title")) or _to_string(fields.get("exactTitle")) or "No Title"
-                text = join_fields_as_text(fields=fields, exclude={"id", "title",title})
+                title = (
+                    _to_string(fields.get("title"))
+                    or _to_string(fields.get("exactTitle"))
+                    or "No Title"
+                )
+                text = join_fields_as_text(
+                    fields=fields, exclude={"id", "title", title}
+                )
 
                 row = {"id": doc_id, "title": title, "text": text}
                 file.write(json.dumps(row, ensure_ascii=False) + "\n")
