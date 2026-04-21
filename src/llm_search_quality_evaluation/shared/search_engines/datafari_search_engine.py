@@ -14,6 +14,11 @@ import json
 
 log = logging.getLogger(__name__)
 
+"""
+This implementation is based on the solr searhch ench engine, as Datafari is based on Solr. 
+It is adapted to work with the specificities of Datafari.
+"""
+
 class DatafariSearchEngine(BaseSearchEngine):
     """
     Datafari implementation to search into a given collection
@@ -21,7 +26,7 @@ class DatafariSearchEngine(BaseSearchEngine):
     def __init__(self, endpoint: HttpUrl):
         super().__init__(endpoint)
         self.HEADERS = {'Content-Type': 'application/json'}
-        self.UNIQUE_KEY = 'id'
+        self.UNIQUE_KEY = 'id'  # forcing the unique key to be 'id' 
         log.debug(f"Working on endpoint: {self.endpoint}")
 
     @property
@@ -122,9 +127,12 @@ class DatafariSearchEngine(BaseSearchEngine):
         
         search_url = urljoin(self.endpoint.encoded_string(), 'select')
 
-        # Force Solr to return a JSON formatted response
+        
+        
         if self.UNIQUE_KEY not in payload.get('fl', []):
             payload['fl'].append(self.UNIQUE_KEY)
+        
+        # Force Solr to return a JSON formatted response
         payload['wt'] = 'json'
 
         log.debug(f"Search url: {search_url}")

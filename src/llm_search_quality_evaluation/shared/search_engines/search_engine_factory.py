@@ -17,7 +17,7 @@ class SearchEngineFactory:
         "solr": SolrSearchEngine,
         "opensearch": OpenSearchEngine,
         "elasticsearch": ElasticsearchSearchEngine,
-        "datafari": DatafariSearchEngine
+        "datafari": DatafariSearchEngine # adding Datafari to the registry
     }
 
     @classmethod

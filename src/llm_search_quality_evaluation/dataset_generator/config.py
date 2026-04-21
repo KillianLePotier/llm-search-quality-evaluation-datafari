@@ -121,7 +121,7 @@ class Config(BaseModel):
             schema_name = self.vespa_schema or "doc"
             return HttpUrl(urljoin(self.search_engine_url.encoded_string() + "/", schema_name + "/"))
         if self.search_engine_type == "datafari":
-            return HttpUrl(self.search_engine_url.encoded_string() + "/")
+            return HttpUrl(self.search_engine_url.encoded_string() + "/") # Datafari uses the base URL without collection name for searching
         else:
             # For other engines: use collection_name
             return HttpUrl(urljoin(self.search_engine_url.encoded_string() + "/", self.collection_name + "/"))

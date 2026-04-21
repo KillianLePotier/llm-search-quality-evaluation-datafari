@@ -5,16 +5,16 @@
 query_template: "examples/templates/template_solr.json"
 #query_template: Null
 # Type of search engine to use
-# Accepted values: solr, elasticsearch, opensearch, vespa
-search_engine_type: "datafari" #"solr"
+# Accepted values: solr, elasticsearch, opensearch, vespa, datafari
+search_engine_type: "datafari"
 
 # Name of the search engine index/collection
-collection_name: "testcore" #"FileShare"
+collection_name: "testcore" 
 
 # URL of the search engine
 # opensearch: http://localhost:9200/
+# solr: http://localhost:8983/solr
 # datafari : https://rag.datafari.com/Datafari/rest/v2.0/search/
-#search_engine_url: http://localhost:8983/solr
 search_engine_url: "https://rag.datafari.com/Datafari/rest/v2.0/search/"
 
 # (Optional) Filter query to restrict the set of documents used to generate queries.
@@ -48,7 +48,7 @@ doc_fields:
 queries: Null
 
 # (Optional) Whether to generate queries from documents
-# Default: true; set to false to disable query generation from documents
+# Default: true; set to false to disavble query generation from documents
 generate_queries_from_documents: true
 
 # Total number of queries to generate (includes predefined queries, if any)
