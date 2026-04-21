@@ -117,7 +117,7 @@ class DatafariSearchEngine(BaseSearchEngine):
         Returns:
             List[Document]: A list of documents matching the query.
         """
-        log.info(
+        log.debug(
             "Fetching documents (rows) based on query template for query evaluation"
         )
 
