@@ -8,6 +8,7 @@ wheels/
 
 # macOS metadata files
 ../.DS_Store
+.DS_Store
 
 # Virtual environments
 .env
@@ -27,7 +28,7 @@ output/
 **/.venv
 **/.mypy_cache
 
-# JetBrains IDE folder
+#Results folders
 .idea/
 /resources
 /results
