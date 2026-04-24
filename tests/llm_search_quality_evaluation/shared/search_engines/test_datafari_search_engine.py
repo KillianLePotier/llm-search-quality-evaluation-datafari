@@ -58,6 +58,7 @@ def test_datafari_fetch_for_query_generation__expects__result_returned(
         documents_filter=datafari_config.documents_filter,
         number_of_docs=datafari_config.number_of_docs,
         doc_fields=datafari_config.doc_fields,
+        collection=datafari_config.collection_name,
     )
 
     doc = result[0]
@@ -80,6 +81,7 @@ def test_datafari_fetch_for_evaluation__expects__result_returned(
         keyword="test",
         query_template=datafari_config.query_template,
         doc_fields=datafari_config.doc_fields,
+        collection=datafari_config.collection_name,
     )
 
     doc = result[0]
@@ -145,6 +147,7 @@ def test_datafari_negative_fetch_for_query_generation__expects__raises_http_erro
                 documents_filter=datafari_config.documents_filter,
                 number_of_docs=datafari_config.number_of_docs,
                 doc_fields=datafari_config.doc_fields,
+                collection=datafari_config.collection_name,
             )
 
 
@@ -165,6 +168,7 @@ def test_datafari_negative_fetch_for_evaluation__expects__raises_http_error(
                 keyword="test",
                 query_template=datafari_config.query_template,
                 doc_fields=datafari_config.doc_fields,
+                collection=datafari_config.collection_name,
             )
 
 

@@ -60,12 +60,17 @@ class DatafariSearchEngine(BaseSearchEngine):
 
         return int(response.json().get("response", {}).get("numFound", 0))
 
+    """
+    Adding collection as a parameter to the fetch methods, as Datafari requires it in the payload to specify the collection to search into.
+    """
+
     def fetch_for_query_generation(
         self,
         documents_filter: Union[None, List[Dict[str, List[str]]]],
         number_of_docs: int,
         doc_fields: List[str],
         start: int = 0,
+        collection: str = "collection_name",
     ) -> List[Document]:
         """
         Fetches a set of documents from Solr for the purpose of query generation.
@@ -75,7 +80,7 @@ class DatafariSearchEngine(BaseSearchEngine):
             number_of_docs (int): Number of documents to retrieve.
             doc_fields (List[str]): List of field names to include in the output.
             start (int, optional): Starting index of the query. Defaults to 0.
-
+            collection (str, optional): The collection to search in. Defaults to "collection_name".
         Returns:
             List[Document]: A list of retrieved documents as `Document` objects.
         """
@@ -87,7 +92,7 @@ class DatafariSearchEngine(BaseSearchEngine):
         payload["rows"] = number_of_docs
         payload["start"] = start
         payload["fl"] = doc_fields
-
+        payload["collection"] = collection
         if documents_filter is not None:
             payload["fq"] = []
             for dict_field in documents_filter:
@@ -104,7 +109,7 @@ class DatafariSearchEngine(BaseSearchEngine):
         return self._search(payload)
 
     def fetch_for_evaluation(
-        self, query_template: Path | str, doc_fields: List[str], keyword: str = "*:*"
+        self, query_template: Path | str, doc_fields: List[str], keyword: str = "*:*", collection: str = "collection_name"
     ) -> List[Document]:
         """
         Executes a search using a query template for evaluation purposes.
@@ -113,6 +118,7 @@ class DatafariSearchEngine(BaseSearchEngine):
             query_template (Path): Path variable pointing to the file with the payload a placeholder for the keyword.
             doc_fields (List[str]): List of fields to include in the response.
             keyword (str, optional): Keyword to inject into the query template. Defaults to "*:*".
+            collection (str, optional): The collection to search in. Defaults to "".
 
         Returns:
             List[Document]: A list of documents matching the query.
@@ -127,7 +133,7 @@ class DatafariSearchEngine(BaseSearchEngine):
             payload, self.QUERY_PLACEHOLDER, self.escape(keyword)
         )
         payload["fl"] = doc_fields
-
+        payload["collection"] = collection
         return self._search(payload)
 
     def _search(

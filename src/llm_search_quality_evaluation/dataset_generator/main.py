@@ -83,11 +83,20 @@ def generate_and_add_queries(
     search_engine: BaseSearchEngine,
 ) -> None:
     """Retrieve docs and generate queries with LLM Service. Adds docs, queries and ratings to the datastore."""
-    docs_to_generate_queries: List[Document] = search_engine.fetch_for_query_generation(
-        documents_filter=config.documents_filter,
-        number_of_docs=config.number_of_docs,
-        doc_fields=config.doc_fields,
-    )
+    """Adding a condition on datafari, as it considers collection as a payload parameter, whereas for other search engines, the collection is defined in the endpoint url."""
+    if config.search_engine_type == "datafari":
+        docs_to_generate_queries: List[Document] = search_engine.fetch_for_query_generation(
+            documents_filter=config.documents_filter,
+            number_of_docs=config.number_of_docs,
+            doc_fields=config.doc_fields,
+            collection=config.collection_name,
+        )
+    else:
+        docs_to_generate_queries: List[Document] = search_engine.fetch_for_query_generation(
+            documents_filter=config.documents_filter,
+            number_of_docs=config.number_of_docs,
+            doc_fields=config.doc_fields,
+        )
 
     for doc in docs_to_generate_queries:
         doc.is_used_to_generate_queries = True
@@ -156,11 +165,19 @@ def expand_docset_with_search_engine_top_k(
             f"Searching for documents with query template in {config.query_template}"
         )
         for query_obj in data_store.get_queries():
-            docs_eval: List[Document] = search_engine.fetch_for_evaluation(
-                keyword=query_obj.text,
-                query_template=config.query_template,
-                doc_fields=config.doc_fields,
-            )
+            if config.search_engine_type == "datafari":
+                docs_eval: List[Document] = search_engine.fetch_for_evaluation(
+                    keyword=query_obj.text,
+                    query_template=config.query_template,
+                    doc_fields=config.doc_fields,
+                    collection=config.collection_name,
+                )
+            else:
+                docs_eval: List[Document] = search_engine.fetch_for_evaluation(
+                    keyword=query_obj.text,
+                    query_template=config.query_template,
+                    doc_fields=config.doc_fields,
+                )
             for doc_obj in docs_eval:
                 data_store.add_document(doc_obj)
                 if not data_store.has_rating_score(query_obj.id, doc_obj.id):
