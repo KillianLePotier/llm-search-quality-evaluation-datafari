@@ -27,7 +27,7 @@ def datafari_config(resource_folder):
 @pytest.fixture
 def mock_doc():
     return {
-        "docId": "1",
+        "id": "1",
         "exactTitle": "A first mocked title",
         "exactContent": "A first mocked description",
     }

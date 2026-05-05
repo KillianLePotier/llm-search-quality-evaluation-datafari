@@ -30,7 +30,7 @@ class DatafariSearchEngine(BaseSearchEngine):
     def __init__(self, endpoint: HttpUrl):
         super().__init__(endpoint)
         self.HEADERS = {"Content-Type": "application/json"}
-        self.UNIQUE_KEY = "docId"  # forcing the unique key to be 'docId'
+        self.UNIQUE_KEY = "id"  # forcing the unique key to be 'docId'
         log.debug(f"Working on endpoint: {self.endpoint}")
 
     @property
