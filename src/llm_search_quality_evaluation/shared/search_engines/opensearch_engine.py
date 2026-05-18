@@ -1,7 +1,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any, Union, Optional
 
 import requests
 from pydantic import HttpUrl
@@ -52,6 +52,7 @@ class OpenSearchEngine(BaseSearchEngine):
         number_of_docs: int,
         doc_fields: List[str],
         start: int = 0,
+        collection: Optional[str] = None
     ) -> List[Document]:
         """Fetches a list of documents for query generation based on optional filters."""
         log.info(

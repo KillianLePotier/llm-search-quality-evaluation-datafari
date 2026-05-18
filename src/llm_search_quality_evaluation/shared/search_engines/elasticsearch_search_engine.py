@@ -56,6 +56,7 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         number_of_docs: int,
         doc_fields: List[str],
         start: int = 0,
+        collection=''
     ) -> List[Document]:
         """
         Fetches a set of documents from Elasticsearch for query generation purposes.

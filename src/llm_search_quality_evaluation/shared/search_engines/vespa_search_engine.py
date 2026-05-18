@@ -143,6 +143,7 @@ class VespaSearchEngine(BaseSearchEngine):
         number_of_docs: int,
         doc_fields: Optional[List[str]],
         start: int = 0,
+        collection: Optional[str] = None
     ) -> List[Document]:
         """
         Fetch documents from Vespa for the purpose of query generation.

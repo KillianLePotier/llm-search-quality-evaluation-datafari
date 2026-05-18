@@ -3,7 +3,7 @@ from urllib.parse import urljoin
 import requests
 from pydantic import HttpUrl
 from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any, Union, Optional
 
 from llm_search_quality_evaluation.shared.search_engines.search_engine_base import (
     BaseSearchEngine,
@@ -72,6 +72,7 @@ class SolrSearchEngine(BaseSearchEngine):
         number_of_docs: int,
         doc_fields: List[str],
         start: int = 0,
+        collection: Optional[str] = None
     ) -> List[Document]:
         """
         Fetches a set of documents from Solr for the purpose of query generation.

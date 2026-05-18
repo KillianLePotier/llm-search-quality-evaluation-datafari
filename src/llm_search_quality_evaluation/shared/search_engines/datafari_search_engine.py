@@ -3,7 +3,7 @@ from urllib.parse import urljoin
 import requests
 from pydantic import HttpUrl
 from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any, Union, Iterator
 
 from llm_search_quality_evaluation.shared.search_engines.search_engine_base import (
     BaseSearchEngine,
@@ -36,7 +36,7 @@ class DatafariSearchEngine(BaseSearchEngine):
     @property
     def _fetch_all_payload(self) -> Dict[str, Any]:
         return {
-            "q": "*:*",
+            "q": "*:*"
         }
 
     def _get_total_hits(self, payload: Dict[str, Any]) -> int:
@@ -207,3 +207,34 @@ class DatafariSearchEngine(BaseSearchEngine):
             return [str(value)]
         except Exception as e:
             raise ValueError(f"Failed to normalize value: {value}") from e
+
+def fetch_all(self, doc_fields: List[str], collection: str) -> Iterator[Document]:
+        """Extract all documents from search engine in batches.
+
+        Yields batches of documents instead of loading everything in memory.
+
+        Args:
+            doc_fields: Fields to extract from documents
+
+        Yields:
+            List[Document]: Batch of documents
+        """
+        # Now this is relying on fetch_for_query_generation to avoid duplicate code. Might be changed in the future
+        start: int = 0
+        total_hits: int = self._get_total_hits(self._fetch_all_payload)
+        while start < total_hits:
+            batch = self.fetch_for_query_generation(
+                documents_filter=None,
+                number_of_docs=NUMBER_OF_DOCS_EACH_FETCH,
+                doc_fields=doc_fields,
+                start=start,
+                collection=collection
+            )
+            if not batch:
+                break
+            for doc in batch:
+                yield doc
+            # if we didn't reach the end of the docs, then len(batch) == NUMBER_OF_DOCS_EACH_FETCH if we reached the
+            # end of the docs. then len(batch) <= NUMBER_OF_DOCS_EACH_FETCH -> next iteration we exit the loop since
+            # we are adding NUMBER_OF_DOCS_EACH_FETCH (not len(batch)) and start becomes greater than total_hits
+            start += NUMBER_OF_DOCS_EACH_FETCH

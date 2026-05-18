@@ -2,7 +2,7 @@ import json
 from abc import ABC, abstractmethod
 from json import JSONDecodeError
 from pathlib import Path
-from typing import List, Dict, Any, Union, Iterator
+from typing import List, Dict, Any, Union, Iterator, Optional
 from pydantic import HttpUrl
 from llm_search_quality_evaluation.shared.models.document import Document
 
@@ -48,7 +48,7 @@ class BaseSearchEngine(ABC):
             sb.append(c)
         return "".join(sb)
 
-    def fetch_all(self, doc_fields: List[str]) -> Iterator[Document]:
+    def fetch_all(self, doc_fields: List[str], collection: Optional[str] = None) -> Iterator[Document]:
         """Extract all documents from search engine in batches.
 
         Yields batches of documents instead of loading everything in memory.
@@ -68,6 +68,7 @@ class BaseSearchEngine(ABC):
                 number_of_docs=NUMBER_OF_DOCS_EACH_FETCH,
                 doc_fields=doc_fields,
                 start=start,
+                collection=collection
             )
             if not batch:
                 break
@@ -113,13 +114,14 @@ class BaseSearchEngine(ABC):
         number_of_docs: int,
         doc_fields: List[str],
         start: int = 0,
+        collection: Optional[str]=None
     ) -> List[Document]:
         """Extract documents for generating queries."""
         pass
 
     @abstractmethod
     def fetch_for_evaluation(
-        self, query_template: Path | str, doc_fields: List[str], keyword: str = "*:*"
+        self, query_template: Path | str, doc_fields: List[str], keyword: str = "*:*",collection: Optional[str]= None
     ) -> List[Document]:
         """Search for documents based on a keyword and a query template to evaluate the system."""
         pass
