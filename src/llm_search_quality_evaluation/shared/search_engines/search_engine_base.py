@@ -61,7 +61,11 @@ class BaseSearchEngine(ABC):
         """
         # Now this is relying on fetch_for_query_generation to avoid duplicate code. Might be changed in the future
         start: int = 0
-        total_hits: int = self._get_total_hits(self._fetch_all_payload)
+        if collection is not None:
+            total_hits: int = self._get_total_hits(self._fetch_all_payload, collection)
+        else:
+            total_hits: int = self._get_total_hits(self._fetch_all_payload)
+        
         while start < total_hits:
             batch = self.fetch_for_query_generation(
                 documents_filter=None,

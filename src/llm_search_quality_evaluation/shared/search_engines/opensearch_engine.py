@@ -52,7 +52,7 @@ class OpenSearchEngine(BaseSearchEngine):
         number_of_docs: int,
         doc_fields: List[str],
         start: int = 0,
-        collection: Optional[str] = None
+        collection: Optional[str] = None  # Added an optional collection parameter to match datafari constraints 
     ) -> List[Document]:
         """Fetches a list of documents for query generation based on optional filters."""
         log.info(

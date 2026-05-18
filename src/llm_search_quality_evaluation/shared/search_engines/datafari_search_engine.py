@@ -3,8 +3,7 @@ from urllib.parse import urljoin
 import requests
 from pydantic import HttpUrl
 from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException
-from typing import List, Dict, Any, Union, Iterator
-
+from typing import List, Dict, Any, Union, Iterator, Optional    
 from llm_search_quality_evaluation.shared.search_engines.search_engine_base import (
     BaseSearchEngine,
 )
@@ -36,14 +35,17 @@ class DatafariSearchEngine(BaseSearchEngine):
     @property
     def _fetch_all_payload(self) -> Dict[str, Any]:
         return {
-            "q": "*:*"
+            "q": "*:*",
         }
 
-    def _get_total_hits(self, payload: Dict[str, Any]) -> int:
+    def _get_total_hits(self, payload: Dict[str, Any],collection_name : Optional[str]) -> int:
         search_url = urljoin(self.endpoint.encoded_string(), "select")
 
         # Force Solr to return a JSON formatted response
         payload["wt"] = "json"
+        if collection_name : 
+            payload["collection"] = collection_name
+
 
         log.debug("Retrieving all docs to count them")
         log.debug(f"Search url: {search_url}")
@@ -221,7 +223,7 @@ def fetch_all(self, doc_fields: List[str], collection: str) -> Iterator[Document
         """
         # Now this is relying on fetch_for_query_generation to avoid duplicate code. Might be changed in the future
         start: int = 0
-        total_hits: int = self._get_total_hits(self._fetch_all_payload)
+        total_hits: int = self._get_total_hits(self._fetch_all_payload(), collection)
         while start < total_hits:
             batch = self.fetch_for_query_generation(
                 documents_filter=None,

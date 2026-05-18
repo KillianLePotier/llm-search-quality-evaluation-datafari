@@ -72,7 +72,7 @@ class SolrSearchEngine(BaseSearchEngine):
         number_of_docs: int,
         doc_fields: List[str],
         start: int = 0,
-        collection: Optional[str] = None
+        collection: Optional[str] = None  # Added an optional collection parameter to match datafari constraints 
     ) -> List[Document]:
         """
         Fetches a set of documents from Solr for the purpose of query generation.

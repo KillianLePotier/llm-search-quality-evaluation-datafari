@@ -117,7 +117,7 @@ def test_datafari_fetch_all__expects__results_returned(
 
     engine = DatafariSearchEngine("https://fakeurl")
 
-    result = engine.fetch_all(doc_fields=datafari_config.doc_fields)
+    result = engine.fetch_all(doc_fields=datafari_config.doc_fields, collection = datafari_config.collection_name)
 
     first = next(result)
     assert first.id == expected_doc.id
