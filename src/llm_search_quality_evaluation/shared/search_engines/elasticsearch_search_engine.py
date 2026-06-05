@@ -29,7 +29,9 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         log.debug(f"Working on endpoint: {self.endpoint}")
         self.UNIQUE_KEY = "_id"
 
-    def _get_total_hits(self, payload: Dict[str, Any]) -> int:
+    def _get_total_hits(
+        self, payload: Dict[str, Any], collection: Optional[str]
+    ) -> int:
         search_url = urljoin(self.endpoint.encoded_string(), "_search")
 
         log.debug(f"Search url: {search_url}")
@@ -56,7 +58,7 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         number_of_docs: int,
         doc_fields: List[str],
         start: int = 0,
-        collection=''
+        collection: str | None = None,
     ) -> List[Document]:
         """
         Fetches a set of documents from Elasticsearch for query generation purposes.
@@ -106,6 +108,7 @@ class ElasticsearchSearchEngine(BaseSearchEngine):
         query_template: Path | str,
         doc_fields: List[str],
         keyword: Optional[str] = None,
+        collection: str | None = None,
     ) -> List[Document]:
         """
         Executes a search for evaluation using a query template with an optional keyword substitution.

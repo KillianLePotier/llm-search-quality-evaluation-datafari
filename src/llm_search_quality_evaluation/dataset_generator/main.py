@@ -84,15 +84,16 @@ def generate_and_add_queries(
 ) -> None:
     """Retrieve docs and generate queries with LLM Service. Adds docs, queries and ratings to the datastore."""
     """Adding a condition on datafari, as it considers collection as a payload parameter, whereas for other search engines, the collection is defined in the endpoint url."""
+    docs_to_generate_queries: List[Document]
     if config.search_engine_type == "datafari":
-        docs_to_generate_queries: List[Document] = search_engine.fetch_for_query_generation(
+        docs_to_generate_queries = search_engine.fetch_for_query_generation(
             documents_filter=config.documents_filter,
             number_of_docs=config.number_of_docs,
             doc_fields=config.doc_fields,
             collection=config.collection_name,
         )
     else:
-        docs_to_generate_queries: List[Document] = search_engine.fetch_for_query_generation(
+        docs_to_generate_queries = search_engine.fetch_for_query_generation(
             documents_filter=config.documents_filter,
             number_of_docs=config.number_of_docs,
             doc_fields=config.doc_fields,
@@ -160,20 +161,21 @@ def expand_docset_with_search_engine_top_k(
     search_engine: BaseSearchEngine,
 ) -> None:
     """Retrieve docs for each query and score the (q, doc) pairs."""
+    docs_eval: List[Document]
     if config.query_template is not None:
         log.debug(
             f"Searching for documents with query template in {config.query_template}"
         )
         for query_obj in data_store.get_queries():
             if config.search_engine_type == "datafari":
-                docs_eval: List[Document] = search_engine.fetch_for_evaluation(
+                docs_eval = search_engine.fetch_for_evaluation(
                     keyword=query_obj.text,
                     query_template=config.query_template,
                     doc_fields=config.doc_fields,
                     collection=config.collection_name,
                 )
             else:
-                docs_eval: List[Document] = search_engine.fetch_for_evaluation(
+                docs_eval = search_engine.fetch_for_evaluation(
                     keyword=query_obj.text,
                     query_template=config.query_template,
                     doc_fields=config.doc_fields,
@@ -252,21 +254,23 @@ def main() -> None:
         # copy pasted from MtebWriter
         corpus_path = Path(output_destination) / "corpus.jsonl"
         corpus_path.unlink(missing_ok=True)
-        with corpus_path.open("a", encoding="utf-8") as file:      
-            for doc in search_engine.fetch_all(doc_fields=config.doc_fields, collection=config.collection_name):
-                    doc_id = str(doc.id)
-                    fields = doc.fields
-                    title = (
-                        _to_string(fields.get("title"))
-                        or _to_string(fields.get("exactTitle"))
-                        or "No Title"
-                    )
-                    text = join_fields_as_text(
-                        fields=fields, exclude={"id", "title", title}
-                    )
+        with corpus_path.open("a", encoding="utf-8") as file:
+            for doc in search_engine.fetch_all(
+                doc_fields=config.doc_fields, collection=config.collection_name
+            ):
+                doc_id = str(doc.id)
+                fields = doc.fields
+                title = (
+                    _to_string(fields.get("title"))
+                    or _to_string(fields.get("exactTitle"))
+                    or "No Title"
+                )
+                text = join_fields_as_text(
+                    fields=fields, exclude={"id", "title", title}
+                )
 
-                    row = {"id": doc_id, "title": title, "text": text}
-                    file.write(json.dumps(row, ensure_ascii=False) + "\n")
+                row = {"id": doc_id, "title": title, "text": text}
+                file.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
 if __name__ == "__main__":

@@ -45,7 +45,9 @@ class SolrSearchEngine(BaseSearchEngine):
         )
         return ",".join(fields)
 
-    def _get_total_hits(self, payload: Dict[str, Any]) -> int:
+    def _get_total_hits(
+        self, payload: Dict[str, Any], collection: Optional[str]
+    ) -> int:
         search_url = urljoin(self.endpoint.encoded_string(), "select")
 
         # Force Solr to return a JSON formatted response
@@ -72,7 +74,9 @@ class SolrSearchEngine(BaseSearchEngine):
         number_of_docs: int,
         doc_fields: List[str],
         start: int = 0,
-        collection: Optional[str] = None  # Added an optional collection parameter to match datafari constraints 
+        collection: Optional[
+            str
+        ] = None,  # Added an optional collection parameter to match datafari constraints
     ) -> List[Document]:
         """
         Fetches a set of documents from Solr for the purpose of query generation.
@@ -111,7 +115,11 @@ class SolrSearchEngine(BaseSearchEngine):
         return self._search(payload)
 
     def fetch_for_evaluation(
-        self, query_template: Path | str, doc_fields: List[str], keyword: str = "*:*"
+        self,
+        query_template: Path | str,
+        doc_fields: List[str],
+        keyword: str = "*:*",
+        collection: str | None = None,
     ) -> List[Document]:
         """
         Executes a search using a query template for evaluation purposes.

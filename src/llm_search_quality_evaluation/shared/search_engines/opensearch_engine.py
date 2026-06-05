@@ -26,7 +26,9 @@ class OpenSearchEngine(BaseSearchEngine):
         self.HEADERS = {"Content-Type": "application/json"}
         self.UNIQUE_KEY = "id"
 
-    def _get_total_hits(self, payload: Dict[str, Any]) -> int:
+    def _get_total_hits(
+        self, payload: Dict[str, Any], collection: Optional[str]
+    ) -> int:
         search_url = f"{self.endpoint}/_search"
         log.debug(f"User-specified fields: {payload.get('_source')}")
         log.debug(f"Search url: {search_url}")
@@ -52,7 +54,9 @@ class OpenSearchEngine(BaseSearchEngine):
         number_of_docs: int,
         doc_fields: List[str],
         start: int = 0,
-        collection: Optional[str] = None  # Added an optional collection parameter to match datafari constraints 
+        collection: Optional[
+            str
+        ] = None,  # Added an optional collection parameter to match datafari constraints
     ) -> List[Document]:
         """Fetches a list of documents for query generation based on optional filters."""
         log.info(
@@ -92,7 +96,11 @@ class OpenSearchEngine(BaseSearchEngine):
         return self._search(payload)
 
     def fetch_for_evaluation(
-        self, query_template: Path | str, doc_fields: List[str], keyword: str = "*"
+        self,
+        query_template: Path | str,
+        doc_fields: List[str],
+        keyword: str = "*",
+        collection: str | None = None,
     ) -> List[Document]:
         """Fetches documents for evaluation by executing a query built from a template."""
 

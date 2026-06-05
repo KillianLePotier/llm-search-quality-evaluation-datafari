@@ -3,9 +3,10 @@ from urllib.parse import urljoin
 import requests
 from pydantic import HttpUrl
 from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException
-from typing import List, Dict, Any, Union, Iterator, Optional    
+from typing import List, Dict, Any, Union, Iterator, Optional
 from llm_search_quality_evaluation.shared.search_engines.search_engine_base import (
-    BaseSearchEngine, NUMBER_OF_DOCS_EACH_FETCH
+    BaseSearchEngine,
+    NUMBER_OF_DOCS_EACH_FETCH,
 )
 from llm_search_quality_evaluation.shared.models.document import Document
 from llm_search_quality_evaluation.shared.utils import clean_text
@@ -38,14 +39,15 @@ class DatafariSearchEngine(BaseSearchEngine):
             "q": "*:*",
         }
 
-    def _get_total_hits(self, payload: Dict[str, Any],collection_name : Optional[str]) -> int:
+    def _get_total_hits(
+        self, payload: Dict[str, Any], collection_name: Optional[str]
+    ) -> int:
         search_url = urljoin(self.endpoint.encoded_string(), "select")
 
         # Force Solr to return a JSON formatted response
         payload["wt"] = "json"
-        if collection_name : 
+        if collection_name:
             payload["collection"] = collection_name
-
 
         log.debug("Retrieving all docs to count them")
         log.debug(f"Search url: {search_url}")
@@ -72,7 +74,7 @@ class DatafariSearchEngine(BaseSearchEngine):
         number_of_docs: int,
         doc_fields: List[str],
         start: int = 0,
-        collection: str = "collection_name",
+        collection: str | None = None,
     ) -> List[Document]:
         """
         Fetches a set of documents from Solr for the purpose of query generation.
@@ -111,7 +113,11 @@ class DatafariSearchEngine(BaseSearchEngine):
         return self._search(payload)
 
     def fetch_for_evaluation(
-        self, query_template: Path | str, doc_fields: List[str], keyword: str = "*:*", collection: str = "collection_name"
+        self,
+        query_template: Path | str,
+        doc_fields: List[str],
+        keyword: str = "*:*",
+        collection: str | None = None,
     ) -> List[Document]:
         """
         Executes a search using a query template for evaluation purposes.

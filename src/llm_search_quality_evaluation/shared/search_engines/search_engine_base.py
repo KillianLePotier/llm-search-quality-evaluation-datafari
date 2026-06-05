@@ -48,7 +48,9 @@ class BaseSearchEngine(ABC):
             sb.append(c)
         return "".join(sb)
 
-    def fetch_all(self, doc_fields: List[str], collection: Optional[str] = None) -> Iterator[Document]:
+    def fetch_all(
+        self, doc_fields: List[str], collection: Optional[str] = None
+    ) -> Iterator[Document]:
         """Extract all documents from search engine in batches.
 
         Yields batches of documents instead of loading everything in memory.
@@ -64,15 +66,15 @@ class BaseSearchEngine(ABC):
         if collection is not None:
             total_hits: int = self._get_total_hits(self._fetch_all_payload, collection)
         else:
-            total_hits: int = self._get_total_hits(self._fetch_all_payload)
-        
+            total_hits = self._get_total_hits(self._fetch_all_payload, collection)
+
         while start < total_hits:
             batch = self.fetch_for_query_generation(
                 documents_filter=None,
                 number_of_docs=NUMBER_OF_DOCS_EACH_FETCH,
                 doc_fields=doc_fields,
                 start=start,
-                collection=collection
+                collection=collection,
             )
             if not batch:
                 break
@@ -118,14 +120,18 @@ class BaseSearchEngine(ABC):
         number_of_docs: int,
         doc_fields: List[str],
         start: int = 0,
-        collection: Optional[str]=None
+        collection: Optional[str] = None,
     ) -> List[Document]:
         """Extract documents for generating queries."""
         pass
 
     @abstractmethod
     def fetch_for_evaluation(
-        self, query_template: Path | str, doc_fields: List[str], keyword: str = "*:*",collection: Optional[str]= None
+        self,
+        query_template: Path | str,
+        doc_fields: List[str],
+        keyword: str = "*:*",
+        collection: Optional[str] = None,
     ) -> List[Document]:
         """Search for documents based on a keyword and a query template to evaluate the system."""
         pass
@@ -136,7 +142,9 @@ class BaseSearchEngine(ABC):
         pass
 
     @abstractmethod
-    def _get_total_hits(self, payload: Dict[str, Any]) -> int:
+    def _get_total_hits(
+        self, payload: Dict[str, Any], collection: Optional[str]
+    ) -> int:
         """Get the total number of documents returned by a query."""
         pass
 
