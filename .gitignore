@@ -19,6 +19,8 @@ wheels/
 output/
 /resources*/
 **/tmp
+configs_*
+
 
 # Docker
 **/volumes/
