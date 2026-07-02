@@ -138,5 +138,3 @@ uv run mypy .
 * `ruff.toml`: Ruff linting rules and settings.
 * `mypy.ini`: Mypy type checking rules and settings.
 
----
->>>>>>> datafari_search_engine
