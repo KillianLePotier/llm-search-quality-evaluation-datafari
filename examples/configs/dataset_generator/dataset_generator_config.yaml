@@ -14,8 +14,8 @@ collection_name: "testcore"
 # URL of the search engine
 # opensearch: http://localhost:9200/
 # solr: http://localhost:8983/solr
-# datafari : https://rag.datafari.com/Datafari/rest/v2.0/search/
-search_engine_url: "https://rag.datafari.com/Datafari/rest/v2.0/search/"
+# datafari : https://[domain_name]/Datafari/rest/v2.0/search/
+search_engine_url: "https://[domain_name]/Datafari/rest/v2.0/search/"
 
 # (Optional) Filter query to restrict the set of documents used to generate queries.
 # If a field has more than one value, the documents retrieved have at least one of the values in the field (OR-
