@@ -1,0 +1,101 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened] # conditions on PR to apply checks 
+    # branches: [] -  ommited. Apply checks on all PRs against any branch when types are met
+    paths:
+      - '**/*.py'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - 'ruff.toml'
+      - 'mypy.ini'
+      - 'pytest.ini'
+      - 'tests/**'
+      - '.github/workflows/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true # cancel older runs when pushing several times to the same PR
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Linting (ruff)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+      - name: Cache uv and venv
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+            .venv
+          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }} # Common cache: key = hash OS + deps
+          restore-keys: |
+            ${{ runner.os }}-uv-
+      - name: Install dependencies (locked)
+        run: uv sync --locked
+      - name: Run ruff check
+        run: uv run ruff check --output-format=github --force-exclude . # exclude routes contained in .gitignore / .ruffignore
+
+  type-check:
+    name: Type Checking (mypy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+      - name: Cache uv and venv
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+            .venv
+          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }} # Common cache: key = hash OS + deps
+          restore-keys: |
+            ${{ runner.os }}-uv-
+      - name: Install dependencies (locked)
+        run: uv sync --locked
+      - name: Run mypy
+        run: uv run mypy src/ --install-types --non-interactive # avoid missing stubs
+
+  test:
+    name: Unit Tests (pytest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "latest"
+      - name: Cache uv and venv
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+            .venv
+          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }} # Common cache: key = hash OS + deps
+          restore-keys: |
+            ${{ runner.os }}-uv-
+      - name: Install dependencies (locked)
+        run: uv sync --locked
+      - name: Run unit tests
+        run: uv run pytest -q
