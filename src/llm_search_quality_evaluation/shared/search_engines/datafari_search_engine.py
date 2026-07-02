@@ -3,10 +3,9 @@ from urllib.parse import urljoin
 import requests
 from pydantic import HttpUrl
 from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException
-from typing import List, Dict, Any, Union, Iterator, Optional
+from typing import List, Dict, Any, Union, Optional
 from llm_search_quality_evaluation.shared.search_engines.search_engine_base import (
     BaseSearchEngine,
-    NUMBER_OF_DOCS_EACH_FETCH,
 )
 from llm_search_quality_evaluation.shared.models.document import Document
 from llm_search_quality_evaluation.shared.utils import clean_text
